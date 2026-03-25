@@ -1,5 +1,10 @@
 # bountychain
 # ⬡ BountyChain
+Team Name - Hunter
+Member - 
+  Anurag Pandey - uppanuragpandey23@gmail.com
+  Jay Sharma - jaysharma.code@gmail.com
+  Raval Nisarg - ravalnisarg07@gmail.com
 
 > **A decentralized, trustless micro-bounty platform for the gig economy.**
 
