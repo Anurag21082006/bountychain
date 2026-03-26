@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BountyChain — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #080b10;
+    --surface:  #0d1117;
+    --card:     #111820;
+    --border:   #1e2a38;
+    --accent:   #7df9c0;
+    --accent2:  #a78bfa;
+    --gold:     #fbbf24;
+    --danger:   #f87171;
+    --admin:    #e879f9;
+    --muted:    #6b7a8d;
+    --faint:    #3a4a5a;
+    --text:     #e8edf4;
+    --subtext:  #8fa0b4;
+    --font-mono: 'Space Mono', monospace;
+    --font-display: 'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* ─── TOPBAR ────────────────────────────────────────────────── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    height: 60px;
+    background: rgba(8,11,16,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .eth-wrap { position:relative; width:24px; height:24px; }
+  .eth-halo {
+    position:absolute; inset:-4px; border-radius:50%;
+    background:radial-gradient(circle,rgba(125,249,192,.3),transparent 70%);
+    animation:pulse 3s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.2)}}
+
+  .topbar-center {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .nav-tab {
+    padding: 0 20px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: crosshair;
+    border: none;
+    background: transparent;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .nav-tab.admin-tab.active { color: var(--admin); border-bottom-color: var(--admin); }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .user-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--subtext);
+  }
+  .user-dot { width:8px; height:8px; border-radius:50%; }
+  .user-dot.hunter { background: var(--accent); }
+  .user-dot.owner  { background: var(--accent2); }
+  .user-dot.admin  { background: var(--admin); animation: blink 1s ease-in-out infinite; }
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+  .btn-sm {
+    padding: 7px 16px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: none;
+    cursor: crosshair;
+    transition: all 0.2s;
+  }
+  .btn-sm.primary { background: var(--accent); color: #080b10; }
+  .btn-sm.primary:hover { background: #fff; }
+  .btn-sm.ghost { background: transparent; color: var(--subtext); border: 1px solid var(--border); }
+  .btn-sm.ghost:hover { color: var(--text); border-color: var(--faint); }
+
+  /* ─── ADMIN BANNER ──────────────────────────────────────────── */
+  .admin-banner {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(232,121,249,0.08);
+    border-bottom: 1px solid rgba(232,121,249,0.3);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--admin);
+  }
+  .admin-banner.show { display: flex; }
+  .admin-pulse { width:8px;height:8px;border-radius:50%;background:var(--admin);animation:blink 1s ease-in-out infinite; }
+
+  /* ─── MAIN LAYOUT ───────────────────────────────────────────── */
+  .dash-layout {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ─── SIDEBAR ───────────────────────────────────────────────── */
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sidebar-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--faint);
+    padding: 0 20px;
+    margin: 16px 0 8px;
+  }
+  .sidebar-label:first-child { margin-top: 0; }
+
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    cursor: crosshair;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    transition: all 0.2s;
+    border-left: 2px solid transparent;
+  }
+  .sidebar-link:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .sidebar-link.active { color: var(--accent); border-left-color: var(--accent); background: rgba(125,249,192,0.05); }
+  .sidebar-link.admin-link.active { color: var(--admin); border-left-color: var(--admin); background: rgba(232,121,249,0.05); }
+
+  .sidebar-ico { font-size: 14px; }
+
+  .badge {
+    margin-left: auto;
+    padding: 2px 8px;
+    font-size: 9px;
+    font-weight: 700;
+    background: rgba(125,249,192,0.12);
+    color: var(--accent);
+    border-radius: 0;
+  }
+  .badge.admin { background: rgba(232,121,249,0.12); color: var(--admin); }
+
+  /* ─── MAIN CONTENT ──────────────────────────────────────────── */
+  .dash-main {
+    flex: 1;
+    padding: 36px 40px;
+    overflow-y: auto;
+  }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ─── PAGE HEADER ───────────────────────────────────────────── */
+  .page-hdr {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    gap: 16px;
+  }
+
+  .page-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 6px;
+  }
+
+  .page-sub {
+    font-size: 14px;
+    color: var(--subtext);
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--accent);
+    color: #080b10;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: none;
+    cursor: crosshair;
+    white-space: nowrap;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .btn-primary:hover { background: #fff; box-shadow: 0 6px 24px rgba(125,249,192,0.3); }
+  .btn-primary.purple { background: var(--accent2); }
+  .btn-primary.purple:hover { background: #c4b5fd; box-shadow: 0 6px 24px rgba(167,139,250,0.3); }
+  .btn-primary.admin { background: var(--admin); }
+  .btn-primary.admin:hover { background: #f5a7ff; box-shadow: 0 6px 24px rgba(232,121,249,0.3); }
+
+  /* ─── STATS ROW ─────────────────────────────────────────────── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    padding: 20px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .stat-card.green::after { background: var(--accent); }
+  .stat-card.purple::after { background: var(--accent2); }
+  .stat-card.gold::after { background: var(--gold); }
+  .stat-card.pink::after { background: var(--admin); }
+  .stat-card:hover::after { opacity: 1; }
+
+  .stat-val {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-val.green  { color: var(--accent); }
+  .stat-val.purple { color: var(--accent2); }
+  .stat-val.gold   { color: var(--gold); }
+  .stat-val.pink   { color: var(--admin); }
+
+  .stat-lbl {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ─── FORM PANEL ────────────────────────────────────────────── */
+  .form-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 36px 40px;
+    max-width: 720px;
+  }
+
+  .form-section-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .form-group { margin-bottom: 24px; }
+
+  .form-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .char-ct { color: var(--faint); font-weight: 400; }
+
+  .form-input, .form-textarea, .form-select {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: none;
+  }
+  .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); }
+  .form-input::placeholder, .form-textarea::placeholder { color: var(--faint); }
+  .form-select { cursor: crosshair; }
+  .form-select option { background: var(--card); }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* ─── UPLOAD ZONE ───────────────────────────────────────────── */
+  .upload-zone {
+    border: 1px dashed var(--border);
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: crosshair;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .upload-zone:hover { border-color: var(--accent); background: rgba(125,249,192,0.02); }
+  .upload-zone.drag-over { border-color: var(--accent); background: rgba(125,249,192,0.05); border-style: solid; }
+
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: crosshair;
+    z-index: 1;
+  }
+
+  .upload-ico { font-size: 28px; flex-shrink: 0; }
+
+  .upload-info-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .upload-info-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .upload-previews {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .upload-thumb {
+    position: relative;
+    width: 80px; height: 64px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .upload-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .upload-thumb .video-icon { font-size: 20px; }
+  .upload-thumb .remove-btn {
+    position: absolute;
+    top: 2px; right: 4px;
+    font-size: 12px;
+    color: var(--danger);
+    cursor: crosshair;
+    background: rgba(8,11,16,0.8);
+    border: none;
+    line-height: 1;
+    padding: 2px 4px;
+  }
+
+  /* ─── STAKE BOX ─────────────────────────────────────────────── */
+  .stake-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: rgba(125,249,192,0.05);
+    border: 1px solid rgba(125,249,192,0.15);
+    margin-bottom: 24px;
+  }
+  .stake-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .stake-amount {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* ─── BOUNTY CARDS (Hunter view) ────────────────────────────── */
+  .bounty-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .bounty-card {
+    padding: 24px 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    cursor: crosshair;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .bounty-card:hover {
+    border-color: rgba(125,249,192,0.25);
+    background: var(--card);
+    transform: translateX(4px);
+  }
+  .bounty-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .bounty-card:hover::before { opacity: 1; }
+
+  .bounty-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .bounty-title {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.4;
+  }
+
+  .bounty-reward {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .bounty-desc {
+    font-size: 13px;
+    color: var(--subtext);
+    line-height: 1.6;
+    margin-bottom: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .bounty-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .bounty-tag {
+    padding: 3px 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    background: rgba(125,249,192,0.08);
+    color: var(--accent);
+    border: 1px solid rgba(125,249,192,0.15);
+  }
+
+  .bounty-status {
+    padding: 3px 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+  .bounty-status.open   { background: rgba(125,249,192,0.07); color: var(--accent);  border: 1px solid rgba(125,249,192,0.15); }
+  .bounty-status.closed { background: rgba(251,191,36,0.07);  color: var(--gold);    border: 1px solid rgba(251,191,36,0.15); }
+
+  .bounty-time {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  /* ─── RATE-LIMIT BAR ────────────────────────────────────────── */
+  .ratelimit-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .rl-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .rl-track {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    position: relative;
+  }
+  .rl-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--accent);
+    transition: width 0.4s ease;
+  }
+  .rl-count {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  /* ─── ADMIN TABLE ───────────────────────────────────────────── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .data-table th {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 10px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .data-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(30,42,56,0.6);
+    vertical-align: middle;
+  }
+
+  .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .table-wrap {
+    border: 1px solid var(--border);
+    overflow: hidden;
+    overflow-x: auto;
+    margin-bottom: 24px;
+  }
+
+  .force-btn {
+    padding: 5px 12px;
+    background: rgba(232,121,249,0.1);
+    border: 1px solid rgba(232,121,249,0.3);
+    color: var(--admin);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: crosshair;
+    transition: all 0.2s;
+  }
+  .force-btn:hover { background: rgba(232,121,249,0.2); border-color: var(--admin); }
+
+  .status-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .status-pill.open    { background: rgba(125,249,192,0.08); color: var(--accent);  }
+  .status-pill.closed  { background: rgba(251,191,36,0.08);  color: var(--gold);    }
+  .status-pill.pending { background: rgba(167,139,250,0.08); color: var(--accent2); }
+
+  /* ─── MY SUBMISSIONS ────────────────────────────────────────── */
+  .sub-card {
+    padding: 20px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .sub-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .sub-status.verified { color: var(--accent); }
+  .sub-status.pending  { color: var(--accent2); }
+
+  .sub-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .sub-text  { font-size: 12px; color: var(--subtext); line-height: 1.5; }
+
+  /* ─── MODAL ─────────────────────────────────────────────────── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(8,11,16,0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    padding: 24px;
+  }
+  .overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 40px 44px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    transform: translateY(8px);
+    transition: transform 0.2s;
+  }
+  .overlay.open .modal { transform: translateY(0); }
+
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 20px;
+    font-size: 16px;
+    color: var(--muted);
+    background: transparent;
+    border: none;
+    cursor: crosshair;
+    transition: color 0.2s;
+  }
+  .modal-close:hover { color: var(--text); }
+
+  .modal-title {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+  }
+
+  .modal-sub {
+    font-size: 13px;
+    color: var(--subtext);
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  /* ─── TOAST ─────────────────────────────────────────────────── */
+  .toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    padding: 12px 20px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.3s;
+    z-index: 9999;
+    pointer-events: none;
+    max-width: 360px;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { background: rgba(125,249,192,0.12); border: 1px solid var(--accent); color: var(--accent); }
+  .toast.error   { background: rgba(248,113,113,0.12); border: 1px solid var(--danger); color: var(--danger); }
+  .toast.admin   { background: rgba(232,121,249,0.12); border: 1px solid var(--admin);  color: var(--admin);  }
+
+  /* ─── SCROLL BAR ────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--faint); }
+
+  /* ─── RESPONSIVE ────────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .dash-main { padding: 24px 20px; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .topbar-center { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── TOPBAR ────────────────────────────────────────────────────── -->
+<header class="topbar" role="banner">
+  <a href="index.html" class="logo" aria-label="BountyChain home">
+    <div class="eth-wrap" aria-hidden="true">
+      <div class="eth-halo"></div>
+      <svg viewBox="0 0 32 32" fill="none" width="24" height="24">
+        <polygon points="16,2 27,16 16,20 5,16" fill="#7df9c0" opacity="0.9"/>
+        <polygon points="16,20 27,16 16,30"      fill="#7df9c0" opacity="0.6"/>
+        <polygon points="16,20 5,16 16,30"       fill="#7df9c0" opacity="0.4"/>
+        <polygon points="16,2 16,20 27,16"       fill="#7df9c0" opacity="0.7"/>
+        <polygon points="16,2 5,16 16,20"        fill="#7df9c0" opacity="0.5"/>
+      </svg>
+    </div>
+    BountyChain
+  </a>
+
+  <!-- Dynamic nav tabs per role -->
+  <nav class="topbar-center" id="topbar-nav" role="tablist" aria-label="Dashboard sections"></nav>
+
+  <div class="topbar-right">
+    <div class="user-chip" id="user-chip" aria-label="Current user">
+      <div class="user-dot" id="user-dot"></div>
+      <span id="user-name">—</span>
+    </div>
+    <button class="btn-sm ghost" id="logout-btn" aria-label="Sign out">Sign Out</button>
+  </div>
+</header>
+
+<!-- Admin Banner -->
+<div class="admin-banner" id="admin-banner" role="alert" aria-live="polite">
+  <span class="admin-pulse" aria-hidden="true"></span>
+  ADMIN MODE ACTIVE — Force-verify any bounty to resolve disputes
+</div>
+
+<!-- ─── MAIN LAYOUT ───────────────────────────────────────────────── -->
+<div class="dash-layout">
+
+  <!-- SIDEBAR (dynamic per role) -->
+  <aside class="sidebar" id="sidebar" aria-label="Navigation sidebar"></aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="dash-main" id="dash-main" role="main">
+
+    <!-- ════════════ OWNER VIEWS ════════════ -->
+    <div class="view" id="view-owner-post">
+      <div class="page-hdr">
+        <div>
+          <div class="page-title">Post a Bounty</div>
+          <div class="page-sub">Describe your problem and stake ETH into escrow. Hunters will submit solutions.</div>
+        </div>
+      </div>
+
+      <div class="stats-row" role="region" aria-label="Your statistics">
+        <div class="stat-card green">
+          <div class="stat-val green" id="owner-stat-posted">3</div>
+          <div class="stat-lbl">Posted</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-val purple">1</div>
+          <div class="stat-lbl">Solved</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-val gold">0.38</div>
+          <div class="stat-lbl">ETH Locked</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-val green">0.18</div>
+          <div class="stat-lbl">ETH Paid Out</div>
+        </div>
+      </div>
+
+      <div class="form-panel">
+        <div class="form-section-title">Bounty Details</div>
+        <form id="post-form" novalidate>
+
+          <div class="form-group">
+            <label class="form-label" for="p-title">
+              Task Description <span style="color:var(--danger)">*</span>
+              <span class="char-ct" id="p-title-ct" aria-live="polite">0/400</span>
+            </label>
+            <textarea class="form-textarea" id="p-title" rows="3"
+              placeholder="Describe the technical problem clearly and specifically…"
+              maxlength="400" aria-required="true"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="p-desc">Full Description</label>
+            <textarea class="form-textarea" id="p-desc" rows="4"
+              placeholder="Provide full context, what you've tried, error messages, expected vs actual behavior…"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="p-code">Code Snippet <span style="color:var(--faint);font-weight:400;text-transform:none;letter-spacing:0">optional</span></label>
+            <textarea class="form-textarea" id="p-code" rows="5"
+              style="font-family:var(--font-mono);font-size:12px;"
+              placeholder="// Paste your problematic code here…"></textarea>
+          </div>
+
+          <!-- MEDIA UPLOAD (Upgraded) -->
+          <div class="form-group">
+            <label class="form-label">
+              Media Attachments <span style="color:var(--faint);font-weight:400;text-transform:none;letter-spacing:0">optional · up to 5 files</span>
+            </label>
+            <div class="upload-zone" id="owner-upload-zone" role="button" aria-label="Upload screenshots or videos" tabindex="0">
+              <input type="file" id="owner-media" accept="image/*,video/*" multiple aria-hidden="true">
+              <div class="upload-ico">📎</div>
+              <div>
+                <div class="upload-info-title">Drag & drop or click to upload</div>
+                <div class="upload-info-sub">PNG, JPG, GIF, WebP · MP4, WebM, MOV · Max 50 MB per file</div>
+              </div>
+            </div>
+            <div class="upload-previews" id="owner-previews"></div>
+          </div>
+
+          <div class="form-section-title" style="margin-top:8px;">Bounty Configuration</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="p-amount">Stake (ETH)</label>
+              <input class="form-input" type="number" id="p-amount" value="0.05" min="0.001" max="100" step="0.005">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="p-tag">Category</label>
+              <select class="form-select" id="p-tag">
+                <option>Solidity</option><option>EVM</option><option>DeFi</option>
+                <option>ZK</option><option>Gas</option><option>Rust</option><option>Hardhat</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="stake-box" aria-live="polite">
+            <span class="stake-label">Amount Escrowed on Deploy</span>
+            <span class="stake-amount" id="stake-display">0.050 ETH</span>
+          </div>
+
+          <div style="display:flex;gap:12px;">
+            <button type="button" class="btn-sm ghost" style="padding:12px 24px;">Cancel</button>
+            <button type="submit" class="btn-primary">Deploy Contract ↗</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Owner: My Bounties view -->
+    <div class="view" id="view-owner-manage">
+      <div class="page-hdr">
+        <div>
+          <div class="page-title">Manage Bounties</div>
+          <div class="page-sub">View submissions and verify solutions to trigger ETH payout.</div>
+        </div>
+        <button class="btn-primary" onclick="switchView('owner-post')">+ New Bounty</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table" aria-label="Your bounties">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Tag</th>
+              <th>Reward</th>
+              <th>Status</th>
+              <th>Submissions</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="owner-bounties-body">
+            <tr>
+              <td>Re-entrancy guard proxy issue</td>
+              <td><span class="bounty-tag">Solidity</span></td>
+              <td style="font-family:var(--font-mono);color:var(--accent);font-weight:700;">0.12 ETH</td>
+              <td><span class="status-pill open">Open</span></td>
+              <td style="font-family:var(--font-mono);font-size:12px;color:var(--subtext);">2 submissions</td>
+              <td><button class="btn-sm primary" onclick="showToast('Opening submissions…','success')">Review</button></td>
+            </tr>
+            <tr>
+              <td>Flash loan arbitrage revert</td>
+              <td><span class="bounty-tag">DeFi</span></td>
+              <td style="font-family:var(--font-mono);color:var(--gold);font-weight:700;">0.18 ETH</td>
+              <td><span class="status-pill closed">Solved</span></td>
+              <td style="font-family:var(--font-mono);font-size:12px;color:var(--subtext);">2 submissions</td>
+              <td><button class="btn-sm ghost" disabled>Resolved</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ════════════ HUNTER VIEWS ════════════ -->
+    <div class="view" id="view-hunter-explore">
+      <div class="page-hdr">
+        <div>
+          <div class="page-title">Explore Bounties</div>
+          <div class="page-sub">Find open problems, submit solutions, earn ETH.</div>
+        </div>
+      </div>
+
+      <!-- Rate limit bar -->
+      <div class="ratelimit-bar" aria-label="Daily submission quota">
+        <div class="rl-label">Daily Submissions</div>
+        <div class="rl-track" role="progressbar" aria-valuemin="0" aria-valuemax="5" aria-valuenow="2" id="rl-bar">
+          <div class="rl-fill" id="rl-fill" style="width:40%"></div>
+        </div>
+        <div class="rl-count" id="rl-count">2 / 5 today</div>
+      </div>
+
+      <div class="bounty-grid" id="hunter-bounty-list" role="list" aria-label="Open bounties">
+        <!-- Bounty cards rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Hunter: My Submissions -->
+    <div class="view" id="view-hunter-submissions">
+      <div class="page-hdr">
+        <div>
+          <div class="page-title">My Submissions</div>
+          <div class="page-sub">Track your solutions and earning history.</div>
+        </div>
+      </div>
+
+      <div class="stats-row" role="region" aria-label="Your submission stats">
+        <div class="stat-card green">
+          <div class="stat-val green">7</div>
+          <div class="stat-lbl">Total Submitted</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-val gold">1</div>
+          <div class="stat-lbl">Verified Won</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-val purple">0.18</div>
+          <div class="stat-lbl">ETH Earned</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-val green">14%</div>
+          <div class="stat-lbl">Win Rate</div>
+        </div>
+      </div>
+
+      <div id="submissions-list">
+        <div class="sub-card">
+          <div>
+            <div class="sub-title">Flash Loan Arbitrage — Aave v3 fix</div>
+            <div class="sub-text">Aave v3 premiums must be approved separately from the loan amount…</div>
+          </div>
+          <div class="sub-status verified">✓ Verified</div>
+        </div>
+        <div class="sub-card">
+          <div>
+            <div class="sub-title">Re-entrancy Guard via EIP-1967 Proxy</div>
+            <div class="sub-text">Use Diamond Storage or ERC-7201 namespaced slots to avoid…</div>
+          </div>
+          <div class="sub-status pending">◈ Pending</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════ ADMIN VIEWS ════════════ -->
+    <div class="view" id="view-admin-overview">
+      <div class="page-hdr">
+        <div>
+          <div class="page-title" style="background:linear-gradient(90deg,var(--admin),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Master Dashboard</div>
+          <div class="page-sub">Admin override active — full platform access and Force Verify privileges.</div>
+        </div>
+      </div>
+
+      <div class="stats-row" role="region" aria-label="Platform statistics">
+        <div class="stat-card pink">
+          <div class="stat-val pink">5</div>
+          <div class="stat-lbl">Total Bounties</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-val green">8</div>
+          <div class="stat-lbl">Total Users</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-val gold">1.84</div>
+          <div class="stat-lbl">ETH Locked</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-val purple">12.3</div>
+          <div class="stat-lbl">ETH Paid Out</div>
+        </div>
+      </div>
+
+      <div class="page-title" style="font-size:18px;margin-bottom:16px;">All Bounties — Force Verify</div>
+
+      <div class="table-wrap">
+        <table class="data-table" aria-label="All bounties">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Title</th>
+              <th>Creator</th>
+              <th>Reward</th>
+              <th>Status</th>
+              <th>Subs</th>
+              <th>Force Verify</th>
+            </tr>
+          </thead>
+          <tbody id="admin-bounties-body">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="page-title" style="font-size:18px;margin-bottom:16px;">All Users</div>
+
+      <div class="table-wrap">
+        <table class="data-table" aria-label="All users">
+          <thead>
+            <tr>
+              <th>Username / ENS</th>
+              <th>Role</th>
+              <th>Address</th>
+              <th>Joined</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="admin-users-body">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main><!-- /dash-main -->
+</div><!-- /dash-layout -->
+
+<!-- ════════ SUBMIT SOLUTION MODAL ════════ -->
+<div class="overlay" id="submit-overlay" role="dialog" aria-modal="true" aria-labelledby="submit-modal-title">
+  <div class="modal">
+    <button class="modal-close" id="submit-close" aria-label="Close modal">✕</button>
+    <div class="modal-title" id="submit-modal-title">Submit Solution</div>
+    <div class="modal-sub" id="submit-bounty-name" style="color:var(--accent);font-weight:700;font-size:14px;margin-bottom:8px;"></div>
+    <p class="modal-sub">Solutions are immutable once submitted. Make it count.</p>
+
+    <div class="form-group">
+      <label class="form-label" for="s-explain">
+        Explanation <span style="color:var(--danger)">*</span>
+        <span class="char-ct" id="s-explain-ct" aria-live="polite">0/800</span>
+      </label>
+      <textarea class="form-textarea" id="s-explain" rows="6"
+        placeholder="Walk through your solution step by step…"
+        maxlength="800" aria-required="true"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="s-code">Code Snippet <span style="color:var(--faint);font-weight:400;text-transform:none;letter-spacing:0">optional</span></label>
+      <textarea class="form-textarea" id="s-code" rows="5"
+        style="font-family:var(--font-mono);font-size:12px;"
+        placeholder="// Your solution code…"></textarea>
+    </div>
+
+    <!-- MEDIA UPLOAD for Submissions (Upgraded) -->
+    <div class="form-group">
+      <label class="form-label">Supporting Media <span style="color:var(--faint);font-weight:400;text-transform:none;letter-spacing:0">optional · images or video</span></label>
+      <div class="upload-zone" id="hunter-upload-zone" role="button" aria-label="Upload images or video" tabindex="0">
+        <input type="file" id="hunter-media" accept="image/*,video/*" multiple aria-hidden="true">
+        <div class="upload-ico">🎬</div>
+        <div>
+          <div class="upload-info-title">Attach screenshots or a walkthrough video</div>
+          <div class="upload-info-sub">PNG, JPG · MP4, WebM · Max 50 MB per file</div>
+        </div>
+      </div>
+      <div class="upload-previews" id="hunter-previews"></div>
+    </div>
+
+    <div style="display:flex;gap:12px;">
+      <button class="btn-sm ghost" style="padding:12px 24px;" id="submit-cancel">Cancel</button>
+      <button class="btn-primary" id="submit-btn">Submit Solution ◈</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="assertive" aria-atomic="true"></div>
+
+<script>
+'use strict';
+
+/* ─── SESSION ────────────────────────────────────────────────────── */
+const role     = sessionStorage.getItem('bc_role')  || new URLSearchParams(location.search).get('view') || 'hunter';
+const username = sessionStorage.getItem('bc_user')  || 'demo.eth';
+const token    = sessionStorage.getItem('bc_token') || '';
+
+/* Redirect to auth if no session */
+if (!sessionStorage.getItem('bc_token') && !location.search.includes('view=')) {
+  /* In production, uncomment: window.location.href = 'auth.html'; */
+}
+
+/* ─── ROLE CONFIG ────────────────────────────────────────────────── */
+const ROLE_CONFIG = {
+  hunter: {
+    dot: 'hunter',
+    navTabs: [
+      { id: 'hunter-explore',     label: 'Explore' },
+      { id: 'hunter-submissions', label: 'My Submissions' },
+    ],
+    sidebar: [
+      { label: 'Hunt', links: [
+        { id: 'hunter-explore',     ico: '🎯', text: 'Explore Bounties', badge: '4' },
+        { id: 'hunter-submissions', ico: '◈', text: 'My Submissions' },
+      ]},
+      { label: 'Account', links: [
+        { id: null, ico: '⚡', text: 'Reputation' },
+        { id: null, ico: '◈', text: 'Earnings' },
+      ]},
+    ],
+    defaultView: 'hunter-explore',
+  },
+  owner: {
+    dot: 'owner',
+    navTabs: [
+      { id: 'owner-post',   label: 'Post Bounty' },
+      { id: 'owner-manage', label: 'My Bounties' },
+    ],
+    sidebar: [
+      { label: 'Bounties', links: [
+        { id: 'owner-post',   ico: '🏆', text: 'Post Bounty' },
+        { id: 'owner-manage', ico: '◈',  text: 'Manage Bounties' },
+      ]},
+      { label: 'Account', links: [
+        { id: null, ico: '⚡', text: 'Analytics' },
+      ]},
+    ],
+    defaultView: 'owner-post',
+  },
+  admin: {
+    dot: 'admin',
+    navTabs: [
+      { id: 'admin-overview', label: '⚡ Admin' },
+    ],
+    sidebar: [
+      { label: 'Master Control', links: [
+        { id: 'admin-overview', ico: '⚡', text: 'Force Verify', badge: 'ADMIN', adminBadge: true },
+      ]},
+      { label: 'Monitor', links: [
+        { id: null, ico: '◈', text: 'All Bounties' },
+        { id: null, ico: '⬡', text: 'All Users' },
+        { id: null, ico: '📊', text: 'Platform Stats' },
+      ]},
+    ],
+    defaultView: 'admin-overview',
+  },
+};
+
+/* ─── SAMPLE DATA ────────────────────────────────────────────────── */
+const BOUNTIES = [
+  { _id:1, title:'Why does my re-entrancy guard still allow nested calls through a proxy?', desc:"Standard ReentrancyGuard from OpenZeppelin on vault contract, but when accessed through an EIP-1967 proxy the guard doesn't persist across calls.", reward:'0.12 ETH', tag:'Solidity', status:'open', creator:'vitalik.eth', views:312, solutions:2, createdAt: Date.now()-7200000 },
+  { _id:2, title:'Optimal calldata compression for batch ERC-20 transfer function', desc:'Trying to minimise gas on a function that processes up to 200 recipient-amount pairs. What encoding strategy keeps calldata cost lowest on mainnet?', reward:'0.08 ETH', tag:'Gas', status:'open', creator:'alice.eth', views:187, solutions:1, createdAt: Date.now()-18000000 },
+  { _id:3, title:'Merkle proof verification failing for leaves with leading zero bytes', desc:'My on-chain verifier rejects valid proofs for some leaf values. Suspecting a hash ordering bug in my off-chain tree builder.', reward:'0.06 ETH', tag:'EVM', status:'open', creator:'arkdev.eth', views:94, solutions:0, createdAt: Date.now()-93600000 },
+  { _id:5, title:'ZK-SNARK prover OOM on circuits with >100k constraints', desc:'Running out of memory during the Groth16 trusted setup phase on a circuit with 120k gates. Using snarkjs locally with 16 GB RAM.', reward:'0.25 ETH', tag:'ZK', status:'open', creator:'vitalik.eth', views:78, solutions:0, createdAt: Date.now()-43200000 },
+];
+
+const USERS = [
+  { username:'vitalik.eth', role:'owner', address:'0x11…22de', joinedAt: Date.now()-8640000000 },
+  { username:'alice.eth',   role:'owner', address:'0x3f…a91c', joinedAt: Date.now()-7200000000 },
+  { username:'arkdev.eth',  role:'hunter', address:'0xaa…bb11', joinedAt: Date.now()-3600000000 },
+  { username:'merkle.eth',  role:'hunter', address:'0xcc…dd99', joinedAt: Date.now()-1800000000 },
+  { username:'hunter.eth',  role:'hunter', address:'0x7f…4d2a', joinedAt: Date.now()-900000000  },
+];
+
+/* ─── DOM REFS ───────────────────────────────────────────────────── */
+const topbarNav   = document.getElementById('topbar-nav');
+const sidebar     = document.getElementById('sidebar');
+const userDot     = document.getElementById('user-dot');
+const userNameEl  = document.getElementById('user-name');
+const adminBanner = document.getElementById('admin-banner');
+const toast       = document.getElementById('toast');
+let   activeView  = '';
+
+/* ─── INIT ───────────────────────────────────────────────────────── */
+function init() {
+  const cfg = ROLE_CONFIG[role] || ROLE_CONFIG.hunter;
+
+  // Set user chip
+  userDot.className = `user-dot ${role}`;
+  userNameEl.textContent = username;
+
+  // Admin banner
+  if (role === 'admin') adminBanner.classList.add('show');
+
+  // Build nav tabs
+  cfg.navTabs.forEach(tab => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-tab' + (role === 'admin' ? ' admin-tab' : '');
+    btn.textContent = tab.label;
+    btn.dataset.view = tab.id;
+    btn.setAttribute('role', 'tab');
+    btn.setAttribute('aria-selected', 'false');
+    btn.addEventListener('click', () => switchView(tab.id));
+    topbarNav.appendChild(btn);
+  });
+
+  // Build sidebar
+  cfg.sidebar.forEach(section => {
+    const lbl = document.createElement('div');
+    lbl.className = 'sidebar-label';
+    lbl.textContent = section.label;
+    sidebar.appendChild(lbl);
+    section.links.forEach(link => {
+      const btn = document.createElement('button');
+      btn.className = 'sidebar-link' + (link.adminBadge ? ' admin-link' : '');
+      btn.dataset.view = link.id || '';
+      btn.innerHTML = `<span class="sidebar-ico">${link.ico}</span>${link.text}` +
+        (link.badge ? `<span class="badge${link.adminBadge?' admin':''}">${link.badge}</span>` : '');
+      if (link.id) btn.addEventListener('click', () => switchView(link.id));
+      sidebar.appendChild(btn);
+    });
+  });
+
+  // Render initial data
+  renderHunterBounties();
+  renderAdminTables();
+
+  // Switch to default view
+  switchView(cfg.defaultView);
+}
+
+/* ─── SWITCH VIEW ────────────────────────────────────────────────── */
+function switchView(viewId) {
+  // Hide all views
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const target = document.getElementById(`view-${viewId}`);
+  if (target) {
+    target.classList.add('active');
+    activeView = viewId;
+  }
+
+  // Update nav tabs
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    const isActive = tab.dataset.view === viewId;
+    tab.classList.toggle('active', isActive);
+    tab.setAttribute('aria-selected', isActive);
+  });
+
+  // Update sidebar links
+  document.querySelectorAll('.sidebar-link').forEach(link => {
+    link.classList.toggle('active', link.dataset.view === viewId);
+  });
+}
+
+/* ─── RENDER HUNTER BOUNTIES ─────────────────────────────────────── */
+function renderHunterBounties() {
+  const list = document.getElementById('hunter-bounty-list');
+  if (!list) return;
+  list.innerHTML = BOUNTIES.map(b => `
+    <div class="bounty-card" role="listitem" data-id="${b._id}">
+      <div class="bounty-card-top">
+        <div class="bounty-title">${esc(b.title)}</div>
+        <div class="bounty-reward">${esc(b.reward)}</div>
+      </div>
+      <div class="bounty-desc">${esc(b.desc)}</div>
+      <div class="bounty-meta">
+        <span class="bounty-tag">${esc(b.tag)}</span>
+        <span class="bounty-status open">Open</span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">${b.views} views · ${b.solutions} subs</span>
+        <span class="bounty-time">${timeAgo(b.createdAt)}</span>
+        <button class="btn-primary" style="margin-left:auto;font-size:10px;padding:8px 18px;"
+          onclick="openSubmitModal(${b._id})" aria-label="Submit solution for ${esc(b.title)}">
+          Submit ◈
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ─── RENDER ADMIN TABLES ────────────────────────────────────────── */
+function renderAdminTables() {
+  const bTbody = document.getElementById('admin-bounties-body');
+  if (bTbody) {
+    bTbody.innerHTML = BOUNTIES.map(b => `
+      <tr>
+        <td style="font-family:var(--font-mono);font-size:12px;color:var(--muted);">#${b._id}</td>
+        <td style="max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(b.title)}</td>
+        <td style="font-family:var(--font-mono);font-size:12px;color:var(--subtext);">${esc(b.creator)}</td>
+        <td style="font-family:var(--font-mono);font-weight:700;color:var(--accent);">${esc(b.reward)}</td>
+        <td><span class="status-pill ${b.status}">${b.status}</span></td>
+        <td style="font-family:var(--font-mono);font-size:12px;color:var(--subtext);">${b.solutions}</td>
+        <td>
+          <button class="force-btn" onclick="forceVerify(${b._id})" aria-label="Force verify bounty ${b._id}">
+            ⚡ Force Verify
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  const uTbody = document.getElementById('admin-users-body');
+  if (uTbody) {
+    uTbody.innerHTML = USERS.map(u => `
+      <tr>
+        <td style="font-family:var(--font-mono);font-weight:700;">${esc(u.username)}</td>
+        <td><span class="status-pill ${u.role === 'owner' ? 'pending' : 'open'}">${esc(u.role)}</span></td>
+        <td style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">${esc(u.address)}</td>
+        <td style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">${timeAgo(u.joinedAt)}</td>
+        <td>
+          <button class="btn-sm ghost" onclick="showToast('User management coming soon.','success')">Manage</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+}
+
+/* ─── FORCE VERIFY ───────────────────────────────────────────────── */
+function forceVerify(bountyId) {
+  showToast(`⚡ Force Verify triggered for Bounty #${bountyId}. Simulating payout…`, 'admin');
+}
+
+/* ─── SUBMIT MODAL ───────────────────────────────────────────────── */
+let pendingBountyId = null;
+
+function openSubmitModal(bountyId) {
+  pendingBountyId = bountyId;
+  const b = BOUNTIES.find(x => x._id === bountyId);
+  const nameEl = document.getElementById('submit-bounty-name');
+  if (nameEl && b) nameEl.textContent = b.title;
+  document.getElementById('s-explain').value = '';
+  document.getElementById('s-code').value    = '';
+  document.getElementById('s-explain-ct').textContent = '0/800';
+  document.getElementById('submit-overlay').classList.add('open');
+  document.getElementById('s-explain').focus();
+}
+
+document.getElementById('submit-close').addEventListener('click',  () => closeSubmitModal());
+document.getElementById('submit-cancel').addEventListener('click', () => closeSubmitModal());
+document.getElementById('submit-overlay').addEventListener('click', e => {
+  if (e.target.id === 'submit-overlay') closeSubmitModal();
+});
+
+function closeSubmitModal() {
+  document.getElementById('submit-overlay').classList.remove('open');
+  pendingBountyId = null;
+}
+
+document.getElementById('s-explain').addEventListener('input', e => {
+  document.getElementById('s-explain-ct').textContent = `${e.target.value.length}/800`;
+});
+
+document.getElementById('submit-btn').addEventListener('click', () => {
+  const text = document.getElementById('s-explain').value.trim();
+  if (!text) { showToast('Please enter your explanation.', 'error'); return; }
+  showToast('Solution submitted on-chain! ◈', 'success');
+  closeSubmitModal();
+  updateRateLimit();
+});
+
+function updateRateLimit() {
+  const dayKey = 'bc_subs_' + new Date().toDateString();
+  const count  = Math.min((parseInt(sessionStorage.getItem(dayKey) || '0', 10) || 0) + 1, 5);
+  sessionStorage.setItem(dayKey, String(count));
+  document.getElementById('rl-fill').style.width = (count / 5 * 100) + '%';
+  document.getElementById('rl-count').textContent = `${count} / 5 today`;
+  document.getElementById('rl-bar').setAttribute('aria-valuenow', count);
+}
+
+/* ─── POST FORM ──────────────────────────────────────────────────── */
+const pAmount = document.getElementById('p-amount');
+if (pAmount) {
+  pAmount.addEventListener('input', e => {
+    const v = parseFloat(e.target.value) || 0;
+    document.getElementById('stake-display').textContent = v.toFixed(3) + ' ETH';
+  });
+}
+
+const pTitle = document.getElementById('p-title');
+if (pTitle) {
+  pTitle.addEventListener('input', e => {
+    document.getElementById('p-title-ct').textContent = `${e.target.value.length}/400`;
+  });
+}
+
+const postForm = document.getElementById('post-form');
+if (postForm) {
+  postForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const title = pTitle.value.trim();
+    if (!title) { showToast('Please enter a task description.', 'error'); return; }
+    showToast('Bounty deployed to smart contract! ↗', 'success');
+    postForm.reset();
+    document.getElementById('stake-display').textContent = '0.050 ETH';
+    document.getElementById('p-title-ct').textContent = '0/400';
+    document.getElementById('owner-previews').innerHTML = '';
+    setTimeout(() => switchView('owner-manage'), 1200);
+  });
+}
+
+/* ─── MEDIA UPLOAD ───────────────────────────────────────────────── */
+function setupUpload(inputId, previewId) {
+  const input   = document.getElementById(inputId);
+  const preview = document.getElementById(previewId);
+  if (!input || !preview) return;
+
+  input.addEventListener('change', () => {
+    Array.from(input.files).forEach(file => {
+      if (file.size > 50 * 1024 * 1024) {
+        showToast(`${file.name} exceeds 50 MB limit.`, 'error');
+        return;
+      }
+      const thumb = document.createElement('div');
+      thumb.className = 'upload-thumb';
+
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          thumb.innerHTML = `<img src="${ev.target.result}" alt="Preview of ${esc(file.name)}">
+            <button class="remove-btn" aria-label="Remove ${esc(file.name)}">✕</button>`;
+          thumb.querySelector('.remove-btn').addEventListener('click', () => thumb.remove());
+        };
+        reader.readAsDataURL(file);
+      } else if (file.type.startsWith('video/')) {
+        thumb.innerHTML = `<span class="video-icon">🎬</span>
+          <button class="remove-btn" aria-label="Remove ${esc(file.name)}">✕</button>`;
+        thumb.querySelector('.remove-btn').addEventListener('click', () => thumb.remove());
+      }
+
+      preview.appendChild(thumb);
+    });
+  });
+}
+
+setupUpload('owner-media',  'owner-previews');
+setupUpload('hunter-media', 'hunter-previews');
+
+/* ─── LOGOUT ─────────────────────────────────────────────────────── */
+document.getElementById('logout-btn').addEventListener('click', () => {
+  sessionStorage.clear();
+  window.location.href = 'auth.html';
+});
+
+/* ─── ESCAPE KEY ─────────────────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeSubmitModal();
+});
+
+/* ─── TOAST ──────────────────────────────────────────────────────── */
+let toastTimer;
+function showToast(msg, type = 'success') {
+  clearTimeout(toastTimer);
+  toast.textContent = msg;
+  toast.className   = `toast ${type} show`;
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+/* ─── HELPERS ────────────────────────────────────────────────────── */
+const esc = s => {
+  if (s == null) return '';
+  const el = document.createElement('div');
+  el.textContent = String(s);
+  return el.innerHTML;
+};
+
+const timeAgo = ts => {
+  const d = Date.now() - ts;
+  const m = Math.floor(d / 60000);
+  if (m < 1)  return 'just now';
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(d / 3600000);
+  if (h < 24) return h + 'h ago';
+  const dy = Math.floor(d / 86400000);
+  if (dy < 7) return dy + 'd ago';
+  return Math.floor(dy / 7) + 'w ago';
+};
+
+/* ─── START ──────────────────────────────────────────────────────── */
+init();
+</script>
+</body>
+</html>

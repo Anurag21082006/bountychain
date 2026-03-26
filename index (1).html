@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BountyChain — Web3 Bounty Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ─── LANDING-ONLY OVERRIDES ─────────────────────────────── */
+  :root {
+    --bg:       #080b10;
+    --surface:  #0d1117;
+    --card:     #111820;
+    --border:   #1e2a38;
+    --accent:   #7df9c0;
+    --accent2:  #a78bfa;
+    --gold:     #fbbf24;
+    --danger:   #f87171;
+    --admin:    #e879f9;
+    --muted:    #6b7a8d;
+    --faint:    #3a4a5a;
+    --text:     #e8edf4;
+    --subtext:  #8fa0b4;
+    --font-mono: 'Space Mono', monospace;
+    --font-display: 'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-display);
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* ─── NOISE OVERLAY ──────────────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* ─── TOPBAR ─────────────────────────────────────────────── */
+  .topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    background: rgba(8,11,16,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    z-index: 1000;
+    transition: background 0.3s;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .eth-wrap {
+    position: relative;
+    width: 32px; height: 32px;
+  }
+  .eth-halo {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(125,249,192,0.3) 0%, transparent 70%);
+    animation: pulse-halo 3s ease-in-out infinite;
+  }
+  @keyframes pulse-halo {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .nav-link {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--subtext);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-link:hover { color: var(--accent); }
+
+  .btn-launch {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    background: var(--accent);
+    color: #080b10;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: none;
+    cursor: crosshair;
+    transition: all 0.2s;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+  .btn-launch:hover {
+    background: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(125,249,192,0.35);
+  }
+
+  /* ─── HERO ───────────────────────────────────────────────── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: 120px 32px 80px;
+  }
+
+  /* Grid background */
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(125,249,192,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(125,249,192,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+  }
+
+  /* Glowing orbs */
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    animation: drift 12s ease-in-out infinite;
+  }
+  .orb-1 {
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(125,249,192,0.12), transparent);
+    top: -100px; left: -100px;
+    animation-delay: 0s;
+  }
+  .orb-2 {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(167,139,250,0.10), transparent);
+    bottom: -50px; right: 10%;
+    animation-delay: -4s;
+  }
+  .orb-3 {
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(251,191,36,0.08), transparent);
+    top: 40%; left: 60%;
+    animation-delay: -8s;
+  }
+  @keyframes drift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(40px, -30px) scale(1.05); }
+    66% { transform: translate(-20px, 40px) scale(0.95); }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    max-width: 900px;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border: 1px solid rgba(125,249,192,0.3);
+    background: rgba(125,249,192,0.05);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 32px;
+    animation: fadeInUp 0.6s ease both;
+  }
+  .badge-dot {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: blink 1.5s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+
+  .hero-title {
+    font-size: clamp(52px, 8vw, 96px);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    margin-bottom: 28px;
+    animation: fadeInUp 0.6s 0.1s ease both;
+  }
+
+  .hero-title .line-1 { color: var(--text); display: block; }
+  .hero-title .line-2 {
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(125,249,192,0.5);
+    display: block;
+  }
+  .hero-title .line-3 {
+    display: block;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 18px;
+    color: var(--subtext);
+    line-height: 1.6;
+    max-width: 560px;
+    margin: 0 auto 48px;
+    font-weight: 400;
+    animation: fadeInUp 0.6s 0.2s ease both;
+  }
+
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    animation: fadeInUp 0.6s 0.3s ease both;
+  }
+
+  .btn-hero-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 36px;
+    background: var(--accent);
+    color: #080b10;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: none;
+    cursor: crosshair;
+    transition: all 0.25s;
+    clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-hero-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0);
+    transition: background 0.2s;
+  }
+  .btn-hero-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(125,249,192,0.4);
+  }
+  .btn-hero-primary:hover::after { background: rgba(255,255,255,0.1); }
+
+  .btn-hero-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 36px;
+    background: transparent;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    cursor: crosshair;
+    transition: all 0.25s;
+  }
+  .btn-hero-outline:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(125,249,192,0.05);
+  }
+
+  /* ─── STATS TICKER ───────────────────────────────────────── */
+  .stats-ticker {
+    position: relative;
+    z-index: 2;
+    margin-top: 80px;
+    display: flex;
+    gap: 1px;
+    animation: fadeInUp 0.6s 0.5s ease both;
+  }
+
+  .ticker-item {
+    flex: 1;
+    padding: 24px 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .ticker-item:first-child { clip-path: polygon(16px 0%, 100% 0%, 100% 100%, 0% 100%, 0% 16px); }
+  .ticker-item:last-child  { clip-path: polygon(0% 0%, 100% 0%, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0% 100%); }
+
+  .ticker-item::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .ticker-item:hover::before { opacity: 1; }
+  .ticker-item:hover { border-color: rgba(125,249,192,0.3); }
+
+  .ticker-val {
+    font-family: var(--font-mono);
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .ticker-val.purple { color: var(--accent2); }
+  .ticker-val.gold   { color: var(--gold); }
+
+  .ticker-lbl {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ─── FEATURES SECTION ───────────────────────────────────── */
+  .section {
+    padding: 120px 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin-bottom: 24px;
+  }
+
+  .section-sub {
+    font-size: 17px;
+    color: var(--subtext);
+    line-height: 1.7;
+    max-width: 560px;
+    margin-bottom: 64px;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .feature-card {
+    padding: 40px 36px;
+    background: var(--surface);
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+  .feature-card:hover { background: var(--card); }
+  .feature-card::after {
+    content: attr(data-num);
+    position: absolute;
+    bottom: -10px; right: 20px;
+    font-family: var(--font-mono);
+    font-size: 80px;
+    font-weight: 700;
+    color: var(--border);
+    line-height: 1;
+    pointer-events: none;
+    transition: color 0.3s;
+  }
+  .feature-card:hover::after { color: rgba(125,249,192,0.06); }
+
+  .feature-ico {
+    width: 48px; height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    background: rgba(125,249,192,0.08);
+    border: 1px solid rgba(125,249,192,0.15);
+    margin-bottom: 24px;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+  }
+  .feature-ico.purple { background: rgba(167,139,250,0.08); border-color: rgba(167,139,250,0.15); }
+  .feature-ico.gold   { background: rgba(251,191,36,0.08);  border-color: rgba(251,191,36,0.15); }
+
+  .feature-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+
+  .feature-desc {
+    font-size: 14px;
+    color: var(--subtext);
+    line-height: 1.7;
+  }
+
+  /* ─── HOW IT WORKS ───────────────────────────────────────── */
+  .how-section {
+    padding: 120px 32px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .how-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px;
+    margin-top: 64px;
+    position: relative;
+  }
+  .steps-grid::after {
+    content: '';
+    position: absolute;
+    top: 32px;
+    left: calc(12.5%);
+    right: calc(12.5%);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), var(--accent), var(--border), transparent);
+  }
+
+  .step {
+    text-align: center;
+    position: relative;
+  }
+
+  .step-num {
+    width: 64px; height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--bg);
+    border: 1px solid rgba(125,249,192,0.3);
+    margin: 0 auto 24px;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    position: relative;
+    z-index: 1;
+  }
+
+  .step-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .step-desc {
+    font-size: 13px;
+    color: var(--subtext);
+    line-height: 1.7;
+  }
+
+  /* ─── ROLES SECTION ──────────────────────────────────────── */
+  .roles-section {
+    padding: 120px 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .roles-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 64px;
+  }
+
+  .role-card-big {
+    padding: 48px 44px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    cursor: crosshair;
+  }
+  .role-card-big.hunter {
+    clip-path: polygon(20px 0%, 100% 0%, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0% 100%, 0% 20px);
+  }
+  .role-card-big.owner {
+    clip-path: polygon(0% 0%, calc(100% - 20px) 0%, 100% 20px, 100% 100%, 20px 100%, 0% calc(100% - 20px));
+  }
+  .role-card-big::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .role-card-big.hunter::before { background: radial-gradient(ellipse at top left, rgba(125,249,192,0.07), transparent 60%); }
+  .role-card-big.owner::before  { background: radial-gradient(ellipse at top right, rgba(167,139,250,0.07), transparent 60%); }
+  .role-card-big:hover::before  { opacity: 1; }
+  .role-card-big:hover { border-color: rgba(125,249,192,0.25); transform: translateY(-4px); }
+  .role-card-big.owner:hover { border-color: rgba(167,139,250,0.25); }
+
+  .role-tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    margin-bottom: 24px;
+  }
+  .role-tag.hunter { background: rgba(125,249,192,0.1); color: var(--accent); border: 1px solid rgba(125,249,192,0.2); }
+  .role-tag.owner  { background: rgba(167,139,250,0.1); color: var(--accent2); border: 1px solid rgba(167,139,250,0.2); }
+
+  .role-emoji { font-size: 48px; margin-bottom: 20px; display: block; }
+
+  .role-name-big {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 16px;
+  }
+
+  .role-desc-big {
+    font-size: 15px;
+    color: var(--subtext);
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  .role-perks {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .role-perk {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--subtext);
+  }
+  .perk-check { color: var(--accent); font-family: var(--font-mono); font-weight: 700; }
+  .perk-check.purple { color: var(--accent2); }
+
+  .role-cta {
+    margin-top: 36px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    transition: gap 0.2s;
+  }
+  .role-cta.purple { color: var(--accent2); }
+  .role-card-big:hover .role-cta { gap: 14px; }
+
+  /* ─── TECH STACK ─────────────────────────────────────────── */
+  .tech-section {
+    padding: 80px 32px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+
+  .tech-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .tech-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .tech-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tech-tag {
+    padding: 6px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .tech-tag:hover { border-color: var(--accent); color: var(--accent); background: rgba(125,249,192,0.05); }
+
+  /* ─── FOOTER ─────────────────────────────────────────────── */
+  .footer {
+    padding: 60px 32px 32px;
+    border-top: 1px solid var(--border);
+  }
+
+  .footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 64px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+
+  .foot-brand-name {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .foot-desc {
+    font-size: 14px;
+    color: var(--subtext);
+    line-height: 1.7;
+    max-width: 300px;
+    margin-bottom: 24px;
+  }
+
+  .foot-col-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .foot-links-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .foot-link {
+    font-size: 14px;
+    color: var(--subtext);
+    text-decoration: none;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .foot-link:hover { color: var(--accent); }
+
+  .foot-bottom {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ─── SCROLL REVEAL ──────────────────────────────────────── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── LIVE BOUNTY TICKER (scrolling) ─────────────────────── */
+  .marquee-wrap {
+    overflow: hidden;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: rgba(125,249,192,0.02);
+    padding: 12px 0;
+  }
+
+  .marquee-inner {
+    display: flex;
+    gap: 48px;
+    animation: marquee 30s linear infinite;
+    white-space: nowrap;
+  }
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  .marquee-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+  }
+
+  .marquee-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .marquee-dot.green { background: var(--accent); }
+  .marquee-dot.purple { background: var(--accent2); }
+  .marquee-dot.gold { background: var(--gold); }
+  .marquee-reward { color: var(--accent); }
+
+  /* ─── RESPONSIVE ─────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .features-grid { grid-template-columns: 1fr; }
+    .steps-grid { grid-template-columns: 1fr 1fr; }
+    .steps-grid::after { display: none; }
+    .roles-grid { grid-template-columns: 1fr; }
+    .footer-inner { grid-template-columns: 1fr; gap: 32px; }
+    .foot-bottom { flex-direction: column; gap: 8px; text-align: center; }
+    .stats-ticker { flex-direction: column; }
+    .tech-inner { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ TOPBAR ═══════════════════════════ -->
+<header class="topbar" role="banner">
+  <a href="index.html" class="logo" aria-label="BountyChain home">
+    <div class="eth-wrap" aria-hidden="true">
+      <div class="eth-halo"></div>
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+        <polygon points="16,2 27,16 16,20 5,16" fill="#7df9c0" opacity="0.9"/>
+        <polygon points="16,20 27,16 16,30"      fill="#7df9c0" opacity="0.6"/>
+        <polygon points="16,20 5,16 16,30"       fill="#7df9c0" opacity="0.4"/>
+        <polygon points="16,2 16,20 27,16"       fill="#7df9c0" opacity="0.7"/>
+        <polygon points="16,2 5,16 16,20"        fill="#7df9c0" opacity="0.5"/>
+      </svg>
+    </div>
+    BountyChain
+  </a>
+
+  <nav class="nav-links" aria-label="Main navigation">
+    <a href="#features" class="nav-link">Features</a>
+    <a href="#how-it-works" class="nav-link">How It Works</a>
+    <a href="#roles" class="nav-link">Roles</a>
+    <a href="https://github.com" class="nav-link" target="_blank" rel="noopener">GitHub ↗</a>
+  </nav>
+
+  <a href="auth.html" class="btn-launch" aria-label="Launch application">
+    <span>⬡</span> Launch App
+  </a>
+</header>
+
+<!-- ═══════════════════════════ HERO ═══════════════════════════ -->
+<section class="hero" role="region" aria-label="Hero section">
+  <div class="orb orb-1" aria-hidden="true"></div>
+  <div class="orb orb-2" aria-hidden="true"></div>
+  <div class="orb orb-3" aria-hidden="true"></div>
+
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      Live on Mainnet · ETH Hackathon 2026
+    </div>
+
+    <h1 class="hero-title">
+      <span class="line-1">Trustless</span>
+      <span class="line-2">Bounties</span>
+      <span class="line-3">On-Chain</span>
+    </h1>
+
+    <p class="hero-sub">
+      Post technical problems, earn ETH rewards for solving them. 
+      Automated smart contract escrow. No middlemen. No trust required.
+    </p>
+
+    <div class="hero-actions">
+      <a href="auth.html" class="btn-hero-primary" aria-label="Start hunting bounties">
+        <span>🎯</span> Start Hunting
+      </a>
+      <a href="auth.html?role=owner" class="btn-hero-outline" aria-label="Post a bounty">
+        <span>+</span> Post a Bounty
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats strip -->
+  <div class="stats-ticker" role="region" aria-label="Platform statistics">
+    <div class="ticker-item">
+      <div class="ticker-val" id="stat-open" aria-label="Open bounties count">—</div>
+      <div class="ticker-lbl">Open Bounties</div>
+    </div>
+    <div class="ticker-item">
+      <div class="ticker-val purple" id="stat-locked">1.84 ETH</div>
+      <div class="ticker-lbl">Total Locked</div>
+    </div>
+    <div class="ticker-item">
+      <div class="ticker-val gold">12.3 ETH</div>
+      <div class="ticker-lbl">Paid Out</div>
+    </div>
+    <div class="ticker-item">
+      <div class="ticker-val">38</div>
+      <div class="ticker-lbl">Active Hunters</div>
+    </div>
+    <div class="ticker-item">
+      <div class="ticker-val">94%</div>
+      <div class="ticker-lbl">Resolution Rate</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ LIVE ACTIVITY MARQUEE ═══ -->
+<div class="marquee-wrap" aria-hidden="true">
+  <div class="marquee-inner">
+    <!-- Duplicated for seamless loop -->
+    <div class="marquee-item"><span class="marquee-dot green"></span> BOUNTY SOLVED · ZK-SNARK OOM Fix · <span class="marquee-reward">0.25 ETH</span> paid to zkwizard.eth</div>
+    <div class="marquee-item"><span class="marquee-dot green"></span> NEW BOUNTY · Merkle Proof Verification Fail · <span class="marquee-reward">0.06 ETH</span></div>
+    <div class="marquee-item"><span class="marquee-dot purple"></span> SOLUTION SUBMITTED · Re-entrancy Guard Proxy · arkdev.eth</div>
+    <div class="marquee-item"><span class="marquee-dot gold"></span> PAYOUT PROCESSED · Flash Loan Arbitrage · <span class="marquee-reward">0.18 ETH</span></div>
+    <div class="marquee-item"><span class="marquee-dot green"></span> NEW BOUNTY · Calldata Compression ERC-20 · <span class="marquee-reward">0.08 ETH</span></div>
+    <div class="marquee-item"><span class="marquee-dot purple"></span> SOLUTION SUBMITTED · Gas Optimization · merkle.eth</div>
+    <!-- Dupe -->
+    <div class="marquee-item"><span class="marquee-dot green"></span> BOUNTY SOLVED · ZK-SNARK OOM Fix · <span class="marquee-reward">0.25 ETH</span> paid to zkwizard.eth</div>
+    <div class="marquee-item"><span class="marquee-dot green"></span> NEW BOUNTY · Merkle Proof Verification Fail · <span class="marquee-reward">0.06 ETH</span></div>
+    <div class="marquee-item"><span class="marquee-dot purple"></span> SOLUTION SUBMITTED · Re-entrancy Guard Proxy · arkdev.eth</div>
+    <div class="marquee-item"><span class="marquee-dot gold"></span> PAYOUT PROCESSED · Flash Loan Arbitrage · <span class="marquee-reward">0.18 ETH</span></div>
+    <div class="marquee-item"><span class="marquee-dot green"></span> NEW BOUNTY · Calldata Compression ERC-20 · <span class="marquee-reward">0.08 ETH</span></div>
+    <div class="marquee-item"><span class="marquee-dot purple"></span> SOLUTION SUBMITTED · Gas Optimization · merkle.eth</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ FEATURES ═══════════════════════════ -->
+<section class="section" id="features" aria-label="Platform features">
+  <div class="reveal">
+    <div class="section-label">Why BountyChain</div>
+    <h2 class="section-title">Built for Web3 Engineers.<br>Secured by Code.</h2>
+    <p class="section-sub">Every bounty is a smart contract. Every payout is trustless. Every solution is immutable on-chain.</p>
+  </div>
+
+  <div class="features-grid reveal" role="list">
+    <div class="feature-card" data-num="01" role="listitem">
+      <div class="feature-ico">🔒</div>
+      <div class="feature-title">Smart Contract Escrow</div>
+      <div class="feature-desc">Bounty funds are locked in an audited ERC-4337 contract the moment a bounty is posted. Payouts trigger automatically on owner verification — no disputes, no delays.</div>
+    </div>
+    <div class="feature-card" data-num="02" role="listitem">
+      <div class="feature-ico purple">⚡</div>
+      <div class="feature-title">Automated Payouts</div>
+      <div class="feature-desc">Once a solution is marked verified, the escrow releases funds to the hunter's wallet in the same transaction. Zero intermediaries. Zero wait time. Gas-optimized.</div>
+    </div>
+    <div class="feature-card" data-num="03" role="listitem">
+      <div class="feature-ico gold">🏆</div>
+      <div class="feature-title">Role-Based Access</div>
+      <div class="feature-desc">Hunters earn reputation scores. Owners build verified track records. Admins can force-resolve disputes. Every action is signed and logged immutably on-chain.</div>
+    </div>
+    <div class="feature-card" data-num="04" role="listitem">
+      <div class="feature-ico">📎</div>
+      <div class="feature-title">Rich Media Submissions</div>
+      <div class="feature-desc">Attach code snippets, high-res screenshots, and explainer videos to your bounties and solutions. Media is stored on Cloudinary/IPFS, hashes anchored on-chain.</div>
+    </div>
+    <div class="feature-card" data-num="05" role="listitem">
+      <div class="feature-ico purple">🎯</div>
+      <div class="feature-title">Daily Rate Limiting</div>
+      <div class="feature-desc">Spam prevention baked in at both the smart contract and server level. Hunters get 5 submissions per day — enforced on-chain and via JWT-scoped rate limiting middleware.</div>
+    </div>
+    <div class="feature-card" data-num="06" role="listitem">
+      <div class="feature-ico gold">◈</div>
+      <div class="feature-title">ENS Identity</div>
+      <div class="feature-desc">Every user is identified by their ENS domain. Reputation, submission history, and earning records are all tied to your non-custodial wallet identity — yours forever.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ HOW IT WORKS ═══════════════════════════ -->
+<section class="how-section" id="how-it-works" aria-label="How BountyChain works">
+  <div class="how-inner">
+    <div class="reveal">
+      <div class="section-label">The Flow</div>
+      <h2 class="section-title">From Problem to Payout<br>in 4 Steps</h2>
+    </div>
+    <div class="steps-grid reveal">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-title">Post Bounty</div>
+        <div class="step-desc">Owner describes the technical problem, attaches code/media, and stakes ETH into the smart contract escrow.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-title">Hunters Explore</div>
+        <div class="step-desc">Hunters browse open bounties, filter by tech stack and reward size, and submit solutions with full explanations.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-title">Owner Verifies</div>
+        <div class="step-desc">The bounty owner reviews submissions. On marking one verified, the smart contract automatically pays out the reward.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-title">ETH Released</div>
+        <div class="step-desc">The winning hunter receives the full bounty reward. Their reputation score increases. The bounty is closed on-chain.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ ROLES ═══════════════════════════ -->
+<section class="roles-section" id="roles" aria-label="Platform roles">
+  <div class="reveal">
+    <div class="section-label">Choose Your Role</div>
+    <h2 class="section-title">Hunter or Owner?<br>You Decide.</h2>
+    <p class="section-sub">Two sides of the same chain. Both earn trust. Both earn ETH.</p>
+  </div>
+
+  <div class="roles-grid reveal">
+    <a href="auth.html?role=hunter" class="role-card-big hunter" aria-label="Join as a Hunter">
+      <span class="role-tag hunter">Hunter</span>
+      <span class="role-emoji">🎯</span>
+      <div class="role-name-big">I solve problems.</div>
+      <div class="role-desc-big">Browse open bounties, submit solutions, earn ETH. Build your on-chain reputation as a top-tier smart contract debugger.</div>
+      <ul class="role-perks">
+        <li class="role-perk"><span class="perk-check">✓</span> Browse all open bounties</li>
+        <li class="role-perk"><span class="perk-check">✓</span> Submit up to 5 solutions/day</li>
+        <li class="role-perk"><span class="perk-check">✓</span> Earn ETH automatically on verification</li>
+        <li class="role-perk"><span class="perk-check">✓</span> Build verifiable on-chain reputation</li>
+      </ul>
+      <div class="role-cta">Start Hunting <span>→</span></div>
+    </a>
+
+    <a href="auth.html?role=owner" class="role-card-big owner" aria-label="Join as an Owner">
+      <span class="role-tag owner">Owner</span>
+      <span class="role-emoji">🏆</span>
+      <div class="role-name-big">I post problems.</div>
+      <div class="role-desc-big">Post your toughest Web3 engineering challenges. Get solutions from the best blockchain developers in the space — only pay when satisfied.</div>
+      <ul class="role-perks">
+        <li class="role-perk"><span class="perk-check purple">✓</span> Post unlimited bounties</li>
+        <li class="role-perk"><span class="perk-check purple">✓</span> Escrow funds with one click</li>
+        <li class="role-perk"><span class="perk-check purple">✓</span> Verify solutions on your timeline</li>
+        <li class="role-perk"><span class="perk-check purple">✓</span> Pay only for the winning solution</li>
+      </ul>
+      <div class="role-cta purple">Post a Bounty <span>→</span></div>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ TECH STACK ═══════════════════════════ -->
+<section class="tech-section" aria-label="Technology stack">
+  <div class="tech-inner">
+    <div class="tech-label">Built With</div>
+    <div class="tech-tags">
+      <span class="tech-tag">MongoDB</span>
+      <span class="tech-tag">Express.js</span>
+      <span class="tech-tag">Node.js</span>
+      <span class="tech-tag">Solidity</span>
+      <span class="tech-tag">ENS</span>
+      <span class="tech-tag">ERC-4337</span>
+      <span class="tech-tag">IPFS</span>
+      <span class="tech-tag">Cloudinary</span>
+      <span class="tech-tag">JWT</span>
+      <span class="tech-tag">bcrypt</span>
+      <span class="tech-tag">Multer</span>
+      <span class="tech-tag">zkEVM</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ FOOTER ═══════════════════════════ -->
+<footer class="footer" role="contentinfo">
+  <div class="footer-inner">
+    <div>
+      <div class="foot-brand-name">
+        <svg viewBox="0 0 20 20" width="20" height="20" fill="none" aria-hidden="true">
+          <polygon points="10,1 17,10 10,13 3,10" fill="#7df9c0" opacity="0.9"/>
+          <polygon points="10,13 17,10 10,19"     fill="#7df9c0" opacity="0.6"/>
+          <polygon points="10,13 3,10 10,19"      fill="#7df9c0" opacity="0.4"/>
+        </svg>
+        BountyChain
+      </div>
+      <div class="foot-desc">Trustless bounties. Automated payouts. On-chain reputation. Built for the next generation of Web3 engineers.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span class="tech-tag">Solidity</span>
+        <span class="tech-tag">ENS</span>
+        <span class="tech-tag">IPFS</span>
+        <span class="tech-tag">ERC-4337</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="foot-col-title">Platform</div>
+      <div class="foot-links-col">
+        <a href="auth.html" class="foot-link">⬡ Launch App</a>
+        <a href="auth.html?role=hunter" class="foot-link">🎯 Hunt Bounties</a>
+        <a href="auth.html?role=owner" class="foot-link">🏆 Post Bounty</a>
+        <a href="#how-it-works" class="foot-link">◈ How It Works</a>
+      </div>
+    </div>
+
+    <div>
+      <div class="foot-col-title">Resources</div>
+      <div class="foot-links-col">
+        <a href="https://github.com" class="foot-link" target="_blank" rel="noopener">⌥ GitHub</a>
+        <a href="https://docs.bountychain.io" class="foot-link" target="_blank" rel="noopener">◈ Docs</a>
+        <a href="#" class="foot-link">⬡ Smart Contracts</a>
+        <a href="#" class="foot-link">⚡ API Reference</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot-bottom">
+    <span>© 2026 BountyChain Protocol. All rights reserved.</span>
+    <div style="display:flex;gap:24px;">
+      <span>◈ Account Abstraction</span>
+      <span>◈ zkEVM Ready</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ─── SCROLL REVEAL ─────────────────────────────────────────
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 100);
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+  // ─── STAT COUNTER ANIMATION ─────────────────────────────────
+  function animateCount(el, target, suffix = '') {
+    let current = 0;
+    const increment = target / 40;
+    const timer = setInterval(() => {
+      current = Math.min(current + increment, target);
+      el.textContent = Math.floor(current) + suffix;
+      if (current >= target) clearInterval(timer);
+    }, 30);
+  }
+
+  const statObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) {
+      animateCount(document.getElementById('stat-open'), 4, '');
+      statObserver.disconnect();
+    }
+  }, { threshold: 0.5 });
+
+  const statEl = document.getElementById('stat-open');
+  if (statEl) statObserver.observe(statEl.closest('.stats-ticker'));
+</script>
+</body>
+</html>

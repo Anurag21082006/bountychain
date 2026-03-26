@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BountyChain — Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #080b10;
+    --surface:  #0d1117;
+    --card:     #111820;
+    --border:   #1e2a38;
+    --accent:   #7df9c0;
+    --accent2:  #a78bfa;
+    --gold:     #fbbf24;
+    --danger:   #f87171;
+    --admin:    #e879f9;
+    --muted:    #6b7a8d;
+    --faint:    #3a4a5a;
+    --text:     #e8edf4;
+    --subtext:  #8fa0b4;
+    --font-mono: 'Space Mono', monospace;
+    --font-display: 'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* ─── NOISE ────────────────────────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* ─── GRID BACKGROUND ──────────────────────────────────────── */
+  .page-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(125,249,192,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(125,249,192,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── ORB ──────────────────────────────────────────────────── */
+  .bg-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .bg-orb-1 {
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(125,249,192,0.07), transparent);
+    top: -200px; right: -100px;
+  }
+  .bg-orb-2 {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(167,139,250,0.07), transparent);
+    bottom: -100px; left: -100px;
+  }
+
+  /* ─── TOP STRIP ────────────────────────────────────────────── */
+  .top-strip {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--gold), var(--accent));
+    background-size: 200%;
+    animation: shimmer 4s linear infinite;
+    z-index: 100;
+  }
+  @keyframes shimmer {
+    from { background-position: 0%; }
+    to   { background-position: 200%; }
+  }
+
+  /* ─── TOPBAR ───────────────────────────────────────────────── */
+  .topbar {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 40px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .eth-wrap {
+    position: relative;
+    width: 28px; height: 28px;
+  }
+  .eth-halo {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(125,249,192,0.3), transparent 70%);
+    animation: pulse 3s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100%{opacity:.5;transform:scale(1)}
+    50%{opacity:1;transform:scale(1.2)}
+  }
+
+  .back-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--accent); }
+
+  /* ─── AUTH LAYOUT ──────────────────────────────────────────── */
+  .auth-layout {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .auth-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    width: 100%;
+    max-width: 960px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  /* ─── LEFT PANEL ───────────────────────────────────────────── */
+  .auth-left {
+    padding: 56px 48px;
+    background: linear-gradient(135deg, rgba(125,249,192,0.04) 0%, transparent 60%);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .auth-left::before {
+    content: '';
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(125,249,192,0.08), transparent);
+    pointer-events: none;
+  }
+
+  .auth-left-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+
+  .auth-left-title {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+
+  .auth-left-desc {
+    font-size: 14px;
+    color: var(--subtext);
+    line-height: 1.7;
+    margin-bottom: 40px;
+  }
+
+  .trust-items {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .trust-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .trust-ico {
+    width: 32px; height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    background: rgba(125,249,192,0.08);
+    border: 1px solid rgba(125,249,192,0.15);
+    flex-shrink: 0;
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+  }
+
+  .trust-text-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .trust-text-desc {
+    font-size: 12px;
+    color: var(--subtext);
+    line-height: 1.5;
+  }
+
+  .live-stat-strip {
+    display: flex;
+    gap: 16px;
+    margin-top: 40px;
+    padding-top: 28px;
+    border-top: 1px solid var(--border);
+  }
+
+  .live-stat {
+    text-align: center;
+  }
+
+  .live-stat-val {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .live-stat-lbl {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ─── RIGHT PANEL ──────────────────────────────────────────── */
+  .auth-right {
+    padding: 56px 48px;
+  }
+
+  /* ─── TABS ─────────────────────────────────────────────────── */
+  .auth-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 36px;
+    border: 1px solid var(--border);
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: transparent;
+    border: none;
+    cursor: crosshair;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .auth-tab.active {
+    color: var(--accent);
+    background: rgba(125,249,192,0.06);
+  }
+  .auth-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  /* ─── ROLE SELECTOR ────────────────────────────────────────── */
+  .role-section-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .role-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .role-card {
+    padding: 16px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    cursor: crosshair;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .role-card:hover { border-color: var(--faint); }
+  .role-card.active-hunter {
+    border-color: var(--accent);
+    background: rgba(125,249,192,0.05);
+  }
+  .role-card.active-owner {
+    border-color: var(--accent2);
+    background: rgba(167,139,250,0.05);
+  }
+  .role-card.active-hunter::after,
+  .role-card.active-owner::after {
+    content: '✓';
+    position: absolute;
+    top: 8px; right: 10px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .role-card.active-hunter::after { color: var(--accent); }
+  .role-card.active-owner::after  { color: var(--accent2); }
+
+  .role-ico { font-size: 20px; margin-bottom: 8px; display: block; }
+
+  .role-name {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .role-hint {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ─── FORM ─────────────────────────────────────────────────── */
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--faint); }
+
+  /* Admin override detection */
+  .admin-hint {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(232,121,249,0.07);
+    border: 1px solid rgba(232,121,249,0.25);
+    margin-bottom: 20px;
+    font-size: 12px;
+    color: var(--admin);
+    animation: fadeIn 0.3s ease;
+  }
+  .admin-hint.show { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .admin-flash { width: 6px; height: 6px; background: var(--admin); border-radius: 50%; animation: blink 1s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.2} }
+
+  /* ─── SUBMIT BTN ───────────────────────────────────────────── */
+  .btn-submit {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #080b10;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: none;
+    cursor: crosshair;
+    transition: all 0.25s;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    margin-top: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-submit:hover {
+    background: #fff;
+    box-shadow: 0 8px 30px rgba(125,249,192,0.3);
+    transform: translateY(-2px);
+  }
+  .btn-submit.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn-submit.admin {
+    background: var(--admin);
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  }
+  .btn-submit.admin:hover {
+    background: #f5a7ff;
+    box-shadow: 0 8px 30px rgba(232,121,249,0.35);
+  }
+
+  /* ─── DIVIDER ──────────────────────────────────────────────── */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .divider span {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    white-space: nowrap;
+  }
+
+  /* ─── WALLET OPTIONS ───────────────────────────────────────── */
+  .wallet-opts {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .wallet-opt {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    cursor: crosshair;
+    transition: all 0.2s;
+  }
+  .wallet-opt:hover { border-color: var(--faint); background: rgba(125,249,192,0.03); }
+
+  .w-ico { font-size: 18px; }
+  .w-name { font-size: 13px; font-weight: 700; }
+  .w-desc { font-size: 11px; color: var(--muted); }
+
+  /* ─── FOOTER TEXT ──────────────────────────────────────────── */
+  .auth-footer-text {
+    margin-top: 24px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .auth-footer-text a { color: var(--accent); text-decoration: none; }
+  .auth-footer-text a:hover { text-decoration: underline; }
+
+  /* ─── LOADING OVERLAY ──────────────────────────────────────── */
+  .loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(8,11,16,0.92);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 50;
+  }
+  .loading-overlay.show { display: flex; }
+
+  .spinner {
+    width: 40px; height: 40px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  /* ─── TOAST ────────────────────────────────────────────────── */
+  .toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    padding: 12px 20px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.3s;
+    z-index: 10000;
+    pointer-events: none;
+    max-width: 360px;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { background: rgba(125,249,192,0.12); border: 1px solid var(--accent); color: var(--accent); }
+  .toast.error   { background: rgba(248,113,113,0.12); border: 1px solid var(--danger); color: var(--danger); }
+  .toast.admin   { background: rgba(232,121,249,0.12); border: 1px solid var(--admin); color: var(--admin); }
+
+  /* ─── RESPONSIVE ───────────────────────────────────────────── */
+  @media (max-width: 700px) {
+    .auth-wrapper { grid-template-columns: 1fr; }
+    .auth-left { display: none; }
+    .auth-right { padding: 36px 28px; }
+    .topbar { padding: 20px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-strip" aria-hidden="true"></div>
+<div class="page-bg" aria-hidden="true"></div>
+<div class="bg-orb bg-orb-1" aria-hidden="true"></div>
+<div class="bg-orb bg-orb-2" aria-hidden="true"></div>
+
+<!-- ─── TOPBAR ──────────────────────────────────────────────────── -->
+<header class="topbar" role="banner">
+  <a href="index.html" class="logo" aria-label="BountyChain home">
+    <div class="eth-wrap" aria-hidden="true">
+      <div class="eth-halo"></div>
+      <svg viewBox="0 0 32 32" fill="none" width="28" height="28">
+        <polygon points="16,2 27,16 16,20 5,16" fill="#7df9c0" opacity="0.9"/>
+        <polygon points="16,20 27,16 16,30"      fill="#7df9c0" opacity="0.6"/>
+        <polygon points="16,20 5,16 16,30"       fill="#7df9c0" opacity="0.4"/>
+        <polygon points="16,2 16,20 27,16"       fill="#7df9c0" opacity="0.7"/>
+        <polygon points="16,2 5,16 16,20"        fill="#7df9c0" opacity="0.5"/>
+      </svg>
+    </div>
+    BountyChain
+  </a>
+
+  <a href="index.html" class="back-link" aria-label="Back to home">
+    ← Back to Home
+  </a>
+</header>
+
+<!-- ─── MAIN AUTH LAYOUT ─────────────────────────────────────────── -->
+<main class="auth-layout" role="main">
+  <div class="auth-wrapper">
+
+    <!-- LEFT INFO PANEL -->
+    <div class="auth-left" aria-label="Platform information">
+      <div>
+        <div class="auth-left-label">BountyChain Protocol</div>
+        <h1 class="auth-left-title">The bounty platform that pays itself.</h1>
+        <p class="auth-left-desc">Smart contract escrow. Automated payouts. On-chain reputation. No middlemen, no trust required — just code.</p>
+
+        <div class="trust-items">
+          <div class="trust-item">
+            <div class="trust-ico">🔒</div>
+            <div>
+              <div class="trust-text-title">JWT + bcrypt Auth</div>
+              <div class="trust-text-desc">Credentials hashed with bcrypt (12 rounds). Sessions signed with RS256 JWTs. Refresh tokens rotated on use.</div>
+            </div>
+          </div>
+          <div class="trust-item">
+            <div class="trust-ico">⚡</div>
+            <div>
+              <div class="trust-text-title">Role-Based Access</div>
+              <div class="trust-text-desc">Owner, Hunter, and Admin roles enforced at the API level. Every route is middleware-protected.</div>
+            </div>
+          </div>
+          <div class="trust-item">
+            <div class="trust-ico">◈</div>
+            <div>
+              <div class="trust-text-title">Smart Contract Escrow</div>
+              <div class="trust-text-desc">Funds locked on-chain at post time. Automated payout on solution verification. Zero custodial risk.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="live-stat-strip" aria-label="Live platform statistics">
+        <div class="live-stat">
+          <div class="live-stat-val">4</div>
+          <div class="live-stat-lbl">Open Bounties</div>
+        </div>
+        <div class="live-stat">
+          <div class="live-stat-val">38</div>
+          <div class="live-stat-lbl">Hunters</div>
+        </div>
+        <div class="live-stat">
+          <div class="live-stat-val">1.84</div>
+          <div class="live-stat-lbl">ETH Locked</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT FORM PANEL -->
+    <div class="auth-right" style="position:relative;">
+
+      <!-- Loading overlay -->
+      <div class="loading-overlay" id="loading-overlay" aria-live="assertive" aria-label="Authenticating">
+        <div class="spinner" aria-hidden="true"></div>
+        <div class="loading-text" id="loading-text">Authenticating…</div>
+      </div>
+
+      <!-- Login / Register Tabs -->
+      <div class="auth-tabs" role="tablist" aria-label="Authentication mode">
+        <button class="auth-tab active" id="tab-login"    role="tab" aria-selected="true"  data-tab="login">Sign In</button>
+        <button class="auth-tab"        id="tab-register" role="tab" aria-selected="false" data-tab="register">Register</button>
+      </div>
+
+      <!-- Role Selector -->
+      <div class="role-section-label">Select Your Role</div>
+      <div class="role-grid" role="radiogroup" aria-label="Select role">
+        <div class="role-card active-hunter" id="role-hunter" tabindex="0" role="radio" aria-checked="true" data-role="hunter">
+          <span class="role-ico">🎯</span>
+          <div class="role-name">Hunter</div>
+          <div class="role-hint">Submit solutions &amp; earn ETH</div>
+        </div>
+        <div class="role-card" id="role-owner" tabindex="0" role="radio" aria-checked="false" data-role="owner">
+          <span class="role-ico">🏆</span>
+          <div class="role-name">Owner</div>
+          <div class="role-hint">Post bounties &amp; verify</div>
+        </div>
+      </div>
+
+      <!-- Admin Hint Banner -->
+      <div class="admin-hint" id="admin-hint" role="alert" aria-live="polite">
+        <span class="admin-flash" aria-hidden="true"></span>
+        <span>Admin override detected — you will be routed to the master dashboard with Force Verify privileges.</span>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="login-username">Username</label>
+          <input class="form-input" type="text" id="login-username" name="username"
+            placeholder="your-username or ENS" autocomplete="username" aria-required="true">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="login-password">
+            Password
+            <a href="#" style="color:var(--muted);font-size:10px;" tabindex="-1">Forgot?</a>
+          </label>
+          <input class="form-input" type="password" id="login-password" name="password"
+            placeholder="••••••••••••" autocomplete="current-password" aria-required="true">
+        </div>
+
+        <button type="submit" class="btn-submit" id="login-btn">
+          Sign In → 
+        </button>
+
+        <div class="divider"><span>or connect wallet</span></div>
+
+        <div class="wallet-opts" role="list">
+          <button type="button" class="wallet-opt" data-wallet="metamask" role="listitem" aria-label="Connect with MetaMask">
+            <span class="w-ico">🦊</span>
+            <div><div class="w-name">MetaMask</div><div class="w-desc">Browser extension wallet</div></div>
+          </button>
+          <button type="button" class="wallet-opt" data-wallet="walletconnect" role="listitem" aria-label="Connect with WalletConnect">
+            <span class="w-ico">🔗</span>
+            <div><div class="w-name">WalletConnect</div><div class="w-desc">Scan QR with mobile wallet</div></div>
+          </button>
+          <button type="button" class="wallet-opt" data-wallet="coinbase" role="listitem" aria-label="Connect with Coinbase Wallet">
+            <span class="w-ico">🔵</span>
+            <div><div class="w-name">Coinbase Wallet</div><div class="w-desc">Self-custody by Coinbase</div></div>
+          </button>
+        </div>
+
+        <div class="auth-footer-text">
+          Don't have an account? <a href="#" id="switch-to-register">Register here</a>
+        </div>
+      </form>
+
+      <!-- REGISTER FORM (hidden by default) -->
+      <form id="register-form" novalidate style="display:none;">
+        <div class="form-group">
+          <label class="form-label" for="reg-username">Username</label>
+          <input class="form-input" type="text" id="reg-username" name="username"
+            placeholder="choose a username" autocomplete="username" aria-required="true">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-email">Email</label>
+          <input class="form-input" type="email" id="reg-email" name="email"
+            placeholder="you@example.com" autocomplete="email" aria-required="true">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-password">Password</label>
+          <input class="form-input" type="password" id="reg-password" name="password"
+            placeholder="min 8 characters" autocomplete="new-password" aria-required="true">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-ens">ENS Domain <span style="color:var(--faint);text-transform:none;letter-spacing:0;font-weight:400">optional</span></label>
+          <input class="form-input" type="text" id="reg-ens" name="ens"
+            placeholder="yourname.eth">
+        </div>
+
+        <button type="submit" class="btn-submit" id="register-btn">
+          Create Account →
+        </button>
+
+        <div class="auth-footer-text">
+          Already have an account? <a href="#" id="switch-to-login">Sign in here</a>
+        </div>
+      </form>
+
+    </div><!-- /auth-right -->
+  </div><!-- /auth-wrapper -->
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="assertive" aria-atomic="true"></div>
+
+<script>
+'use strict';
+
+/* ─── CONFIG ─────────────────────────────────────────────────────── */
+const ADMIN_USERNAME = 'admin';
+const ADMIN_PASSWORD = 'admin@2108';
+const API_BASE = '/api';   /* Change to your Express server URL */
+
+/* ─── STATE ──────────────────────────────────────────────────────── */
+let selectedRole = 'hunter';
+let activeTab    = 'login';
+
+/* ─── DOM REFS ───────────────────────────────────────────────────── */
+const loginForm      = document.getElementById('login-form');
+const registerForm   = document.getElementById('register-form');
+const tabLogin       = document.getElementById('tab-login');
+const tabRegister    = document.getElementById('tab-register');
+const roleHunter     = document.getElementById('role-hunter');
+const roleOwner      = document.getElementById('role-owner');
+const adminHint      = document.getElementById('admin-hint');
+const loginBtn       = document.getElementById('login-btn');
+const loginUsername  = document.getElementById('login-username');
+const loginPassword  = document.getElementById('login-password');
+const loadingOverlay = document.getElementById('loading-overlay');
+const loadingText    = document.getElementById('loading-text');
+const toast          = document.getElementById('toast');
+
+/* ─── ROLE SELECTION ─────────────────────────────────────────────── */
+function selectRole(role) {
+  selectedRole = role;
+  roleHunter.classList.toggle('active-hunter', role === 'hunter');
+  roleHunter.classList.remove('active-owner');
+  roleOwner.classList.toggle('active-owner', role === 'owner');
+  roleOwner.classList.remove('active-hunter');
+  roleHunter.setAttribute('aria-checked', role === 'hunter');
+  roleOwner.setAttribute('aria-checked',  role === 'owner');
+}
+
+roleHunter.addEventListener('click', () => selectRole('hunter'));
+roleOwner.addEventListener('click',  () => selectRole('owner'));
+roleHunter.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') selectRole('hunter'); });
+roleOwner.addEventListener('keydown',  e => { if (e.key==='Enter'||e.key===' ') selectRole('owner');  });
+
+/* Pre-select role from URL param */
+const urlRole = new URLSearchParams(location.search).get('role');
+if (urlRole === 'owner') selectRole('owner');
+
+/* ─── TAB SWITCH ─────────────────────────────────────────────────── */
+function switchTab(tab) {
+  activeTab = tab;
+  tabLogin.classList.toggle('active', tab === 'login');
+  tabRegister.classList.toggle('active', tab === 'register');
+  tabLogin.setAttribute('aria-selected', tab === 'login');
+  tabRegister.setAttribute('aria-selected', tab === 'register');
+  loginForm.style.display    = tab === 'login'    ? 'block' : 'none';
+  registerForm.style.display = tab === 'register' ? 'block' : 'none';
+  adminHint.classList.remove('show');
+}
+
+tabLogin.addEventListener('click',    () => switchTab('login'));
+tabRegister.addEventListener('click', () => switchTab('register'));
+document.getElementById('switch-to-register').addEventListener('click', e => { e.preventDefault(); switchTab('register'); });
+document.getElementById('switch-to-login').addEventListener('click',    e => { e.preventDefault(); switchTab('login'); });
+
+/* ─── ADMIN HINT DETECTION ───────────────────────────────────────── */
+function checkAdminHint() {
+  const u = loginUsername.value.trim();
+  const p = loginPassword.value;
+  adminHint.classList.toggle('show', u === ADMIN_USERNAME && p === ADMIN_PASSWORD);
+  loginBtn.classList.toggle('admin', u === ADMIN_USERNAME && p === ADMIN_PASSWORD);
+  if (u === ADMIN_USERNAME && p === ADMIN_PASSWORD) {
+    loginBtn.textContent = '⚡ Admin Override →';
+  } else {
+    loginBtn.textContent = 'Sign In →';
+  }
+}
+
+loginUsername.addEventListener('input',  checkAdminHint);
+loginPassword.addEventListener('input',  checkAdminHint);
+
+/* ─── TOAST ──────────────────────────────────────────────────────── */
+let toastTimer;
+function showToast(msg, type = 'success') {
+  clearTimeout(toastTimer);
+  toast.textContent  = msg;
+  toast.className    = `toast ${type} show`;
+  toastTimer = setTimeout(() => { toast.classList.remove('show'); }, 3500);
+}
+
+/* ─── LOADING ────────────────────────────────────────────────────── */
+function setLoading(show, text = 'Authenticating…') {
+  loadingText.textContent = text;
+  loadingOverlay.classList.toggle('show', show);
+}
+
+/* ─── REDIRECT ───────────────────────────────────────────────────── */
+function redirect(role) {
+  const destMap = {
+    admin:   'dashboard.html?view=admin',
+    owner:   'dashboard.html?view=owner',
+    hunter:  'dashboard.html?view=hunter',
+  };
+  window.location.href = destMap[role] || 'dashboard.html';
+}
+
+/* ─── LOGIN HANDLER ──────────────────────────────────────────────── */
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const username = loginUsername.value.trim();
+  const password = loginPassword.value;
+
+  if (!username || !password) {
+    showToast('Please fill in all fields.', 'error');
+    return;
+  }
+
+  /* ── ADMIN OVERRIDE (client-side early check) ── */
+  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+    setLoading(true, 'Admin override detected…');
+    await sleep(1400);
+    setLoading(false);
+    showToast('⚡ Admin access granted. Routing to master dashboard…', 'admin');
+    await sleep(1200);
+    /* In production, POST /api/auth/login → verify server-side → receive JWT with role:admin */
+    sessionStorage.setItem('bc_role',  'admin');
+    sessionStorage.setItem('bc_user',  'admin');
+    sessionStorage.setItem('bc_token', 'DEMO_ADMIN_TOKEN');
+    redirect('admin');
+    return;
+  }
+
+  setLoading(true, 'Signing in…');
+
+  try {
+    /* ── PRODUCTION: POST /api/auth/login ──
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password, role: selectedRole }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Login failed');
+    const { token, user } = data;
+    sessionStorage.setItem('bc_token', token);
+    sessionStorage.setItem('bc_role',  user.role);
+    sessionStorage.setItem('bc_user',  user.username);
+    redirect(user.role);
+    */
+
+    /* ── DEMO (no backend running) ── */
+    await sleep(1600);
+    setLoading(false);
+    showToast(`Welcome back! Routing to ${selectedRole} dashboard…`, 'success');
+    await sleep(1000);
+    sessionStorage.setItem('bc_role',  selectedRole);
+    sessionStorage.setItem('bc_user',  username);
+    sessionStorage.setItem('bc_token', 'DEMO_TOKEN');
+    redirect(selectedRole);
+
+  } catch (err) {
+    setLoading(false);
+    showToast(err.message || 'Login failed. Try again.', 'error');
+  }
+});
+
+/* ─── REGISTER HANDLER ───────────────────────────────────────────── */
+registerForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const username = document.getElementById('reg-username').value.trim();
+  const email    = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const ens      = document.getElementById('reg-ens').value.trim();
+
+  if (!username || !email || !password) {
+    showToast('Please fill in all required fields.', 'error');
+    return;
+  }
+  if (password.length < 8) {
+    showToast('Password must be at least 8 characters.', 'error');
+    return;
+  }
+
+  setLoading(true, 'Creating account…');
+
+  try {
+    /* ── PRODUCTION: POST /api/auth/register ──
+    const res = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password, ens, role: selectedRole }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Registration failed');
+    const { token, user } = data;
+    sessionStorage.setItem('bc_token', token);
+    sessionStorage.setItem('bc_role',  user.role);
+    sessionStorage.setItem('bc_user',  user.username);
+    redirect(user.role);
+    */
+
+    /* ── DEMO ── */
+    await sleep(1800);
+    setLoading(false);
+    showToast(`Account created! Welcome to BountyChain.`, 'success');
+    await sleep(1000);
+    sessionStorage.setItem('bc_role',  selectedRole);
+    sessionStorage.setItem('bc_user',  username);
+    sessionStorage.setItem('bc_token', 'DEMO_TOKEN');
+    redirect(selectedRole);
+
+  } catch (err) {
+    setLoading(false);
+    showToast(err.message || 'Registration failed.', 'error');
+  }
+});
+
+/* ─── WALLET CONNECT ─────────────────────────────────────────────── */
+document.querySelectorAll('.wallet-opt').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const wallet = btn.dataset.wallet;
+    setLoading(true, `Connecting ${wallet}…`);
+    await sleep(1800);
+    setLoading(false);
+    showToast(`${wallet} connected! Routing to dashboard…`, 'success');
+    await sleep(900);
+    sessionStorage.setItem('bc_role',  selectedRole);
+    sessionStorage.setItem('bc_user',  'wallet.eth');
+    sessionStorage.setItem('bc_token', 'WALLET_TOKEN');
+    redirect(selectedRole);
+  });
+});
+
+/* ─── UTIL ───────────────────────────────────────────────────────── */
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+</script>
+</body>
+</html>
